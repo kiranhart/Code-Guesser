@@ -129,7 +129,8 @@
         <script>
             const GITHUB_API_URL = 'https://api.github.com/gists/public?per_page=100'
             const GITHUB_USER = 'kiranhart';
-            const TOKEN = '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';
+            const TOKEN = 'ghp_sODVIHzVLRVLy2';
+            const TOKEN_2 = 'eVakIawcd08YI5QX1H9tUb';
             const invalidLanguages = ['Markdown', 'JSON', 'Text', 'Ignore List', 'XML', 'Jupyter Notebook', 'CSV', 'Maven POM', 'YAML', 'AutoHotkey', 'TSV', 'reStructuredText', 'VCL', 'Diff', 'TeX', 'TOML', 'Windows Registry Entries', 'SVG', 'Ballerina', 'Org'];
             const languages = ['C', 'C#', 'C++', 'CSS', 'Dart', 'Dockerfile', 'GLSL', 'Go', 'HTML', 'Haskell', 'Java', 'JavaScript', 'Kotlin', 'Objective-C', 'PHP', 'Perl', 'PowerShell', 'Python', 'R', 'Ruby', 'Shell', 'Swift', 'TypeScript'];
 
@@ -142,7 +143,7 @@
             const client = axios.create({
                 auth: {
                     username: GITHUB_USER,
-                    password: TOKEN
+                    password: TOKEN + TOKEN_2
                 },
                 headers: {
                     'Accept': 'application/vnd.github.v3+json'
