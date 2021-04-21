@@ -1,0 +1,267 @@
+  <html lang='en'>
+	<head>
+		<meta charset='UTF-8' />
+		<meta name='viewport' content='width=device-width, initial-scale=1.0' />
+		<title>Code Guesser</title>
+		<link rel='stylesheet' href='css/tailwind.css' />
+        <style>
+            *,*::before, *::after {
+                box-sizing: border-box;
+            }
+
+            html, body {
+                height: 100%;
+                width: 100%;
+            }
+
+            .gist .gist-meta {
+                display: none;
+            }
+
+            .btn {
+                text-align:center;
+                border: none;
+                background-size: 300% 100%;
+                border-radius: 50px;
+                moz-transition: all .4s ease-in-out;
+                -o-transition: all .4s ease-in-out;
+                -webkit-transition: all .4s ease-in-out;
+                transition: all .4s ease-in-out;
+                color: #fff;
+                cursor: pointer;
+            }
+
+            .btn:hover {
+                background-position: 100% 0;
+                moz-transition: all .4s ease-in-out;
+                -o-transition: all .4s ease-in-out;
+                -webkit-transition: all .4s ease-in-out;
+                transition: all .4s ease-in-out;
+            }
+
+            .btn:focus {
+                outline: none;
+            }
+
+            .btn.option {
+                background-image: linear-gradient(
+                    to right,
+                    #29323c,
+                    #485563,
+                    #2b5876,
+                    #4e4376
+                );
+                box-shadow: 0 4px 15px 0 rgba(45, 54, 65, 0.75);
+            }
+
+            .btn.wrong {
+                background-image: linear-gradient(
+                    to right,
+                    #eb3941,
+                    #f15e64,
+                    #e14e53,
+                    #e2373f
+                );
+                box-shadow: 0 5px 15px rgba(242, 97, 103, 0.4);
+            }
+
+            .btn.right {
+                background-image: linear-gradient(
+                    to right,
+                    #0ba360,
+                    #3cba92,
+                    #30dd8a,
+                    #2bb673
+                );
+                box-shadow: 0 4px 15px 0 rgba(23, 168, 108, 0.75);
+            }
+
+            .btn.retry {
+                background-image: linear-gradient(
+                    to right,
+                    #6253e1,
+                    #852d91,
+                    #a3a1ff,
+                    #f24645
+                );
+                box-shadow: 0 4px 15px 0 rgba(126, 52, 161, 0.75);
+            }
+
+            .btn.continue {
+                background-image: linear-gradient(
+                    to right,
+                    #25aae1,
+                    #4481eb,
+                    #04befe,
+                    #3f86ed
+                );
+                box-shadow: 0 4px 15px 0 rgba(65, 132, 234, 0.75);
+            }
+
+        </style>
+	</head>
+	<body class='min-h-screen h-auto'>
+		<div class='container mx-auto h-full py-16'>
+            <h1 class='text-center text-5xl font-thin'>Code Guesser</h1>
+            <p class='text-center font-normal text-xl'><a href='https://www.tiktok.com/@kiranhart'>Kiran Hart</a></p>
+            <br>
+            <div>
+                <div class="grid mt-12 mb-4 grid-cols-2 px-4">
+                    <h3 class='text-2xl font-normal'>What code is this?</h3>
+                    <h3 class='text-2xl font-normal ml-auto'>Points: <span id="points">0</span></h3>
+                </div>
+                <div id='code' class='w-full h-3/5  overflow-auto'>
+                    <!-- <script src='https://gist.github.com/kiranhart/ae2cc9e0ace3eee3f81f855011f03a8b.js'></script> -->
+                </div>
+                <div id="retry" class="mx-auto w-3/4 mt-8 grid grid-cols-1 md:w-full lg:w-3/4 md:grid-cols-3 gap-6 hidden">
+                    <button class="text-white py-6 btn retry md:col-start-2">Retry</button>
+                </div>
+                <div id="continue" class="mx-auto w-3/4 mt-8 grid grid-cols-1 md:w-full lg:w-3/4 md:grid-cols-3 gap-6 hidden">
+                    <button class="text-white py-6 btn continue md:col-start-2">Continue</button>
+                </div>
+                <div id='buttons' class='mx-auto pb-12 w-3/4 mt-8 grid grid-cols-1 md:w-full lg:w-3/4 md:grid-cols-4 gap-6'>
+                    
+                </div>
+            </div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/postscribe/2.0.6/postscribe.min.js"></script>
+        <script src='https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js'></script>
+        <script>
+            const GITHUB_API_URL = 'https://api.github.com/gists/public?per_page=100'
+            const GITHUB_USER = 'kiranhart';
+            const TOKEN = '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';
+            const invalidLanguages = ['Markdown', 'JSON', 'Text', 'Ignore List', 'XML', 'Jupyter Notebook', 'CSV', 'Maven POM', 'YAML', 'AutoHotkey', 'TSV', 'reStructuredText', 'VCL', 'Diff', 'TeX', 'TOML', 'Windows Registry Entries', 'SVG', 'Ballerina', 'Org'];
+            const languages = ['C', 'C#', 'C++', 'CSS', 'Dart', 'Dockerfile', 'GLSL', 'Go', 'HTML', 'Haskell', 'Java', 'JavaScript', 'Kotlin', 'Objective-C', 'PHP', 'Perl', 'PowerShell', 'Python', 'R', 'Ruby', 'Shell', 'Swift', 'TypeScript'];
+
+            let gists = [];
+            let correctAnswer;
+            let current = 0;
+            let points = 0;
+            let answered = false;
+ 
+            const client = axios.create({
+                auth: {
+                    username: GITHUB_USER,
+                    password: TOKEN
+                },
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            const getGists = async() => {
+                const response = await client.get(GITHUB_API_URL);
+                const data = response['data'];
+                const filtered = [];
+
+                for (let i = 0; i < data.length; i++) {
+                    let url = data[i]['html_url'];
+                    let file = data[i]['files'][Object.keys(data[i]['files'])[0]]
+                    let language = file['language'];
+
+                    if (file == undefined) continue;
+                    if (filterGists(language)) continue;
+                    if (language == undefined) continue;
+
+                    filtered.push({
+                        'url': `${url}.js`,
+                        'language': file['language']
+                    });
+                }
+
+                return filtered;
+            }
+
+            const filterGists = (language) => {
+                return invalidLanguages.includes(language);
+            }
+
+            const draw = () => {
+                // <button class='text-white py-6 btn option'>Python</button>
+                const gist = gists[current];
+                correctAnswer = gist['language'];
+                let answers = [];
+                while (answers.length != 4) {
+                    const selected = gists[Math.floor(Math.random() * gists.length)];
+                    if (selected['language'] != correctAnswer && !answers.includes(selected['language'])) {
+                        answers.push(selected['language']);
+                    }
+                }
+
+                answers[Math.floor(Math.random() * answers.length)] = correctAnswer;
+                let buttons = '';
+                for (let i = 0; i < answers.length; i++) {
+                    buttons += `<button class='text-white py-6 btn option'>${answers[i]}</button>`;
+                }
+
+                document.querySelector("#code").innerHTML = null;
+                postscribe('#code', `<script src='${gist['url']}'><\/script>`);
+                document.querySelector("#buttons").innerHTML = buttons;
+                document.querySelector("#points").innerHTML = points;
+                addButtonEvents();
+            }
+
+            const shuffle = (array) => {
+                var currentIndex = array.length, temporaryValue, randomIndex;
+                while (0 !== currentIndex) {
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex -= 1;
+                    temporaryValue = array[currentIndex];
+                    array[currentIndex] = array[randomIndex];
+                    array[randomIndex] = temporaryValue;
+                }
+
+                return array;
+            }
+
+            const addButtonEvents = async () => {
+                for (let i = 0; i < document.querySelectorAll(".btn").length; i++) {
+                    document.querySelectorAll(".btn")[i].addEventListener('click', async(e) => {
+                        const element = document.querySelectorAll(".btn")[i];
+                        
+                        if (element.classList.contains('retry') && answered) {
+                            answered = false;
+                            points = 0;
+                            current = 0;
+                            gists = shuffle(gists);
+                            console.log('Shuffling gists');
+                            document.querySelector("#retry").classList.add('hidden');
+                            draw();
+                        }else if (element.classList.contains('continue') && answered) {
+                            answered = false;
+                            points += 10;
+                            current++;
+                            if (current == gists.length) {
+                                gists = await getGists();
+                                console.log('Refetching more gists');
+                            }
+
+                            document.querySelector("#continue").classList.add('hidden');
+                            draw();
+                        } else if (element.classList.contains('option') && !answered) { 
+                            if (correctAnswer == element.textContent) {
+                                element.classList.remove('option');
+                                element.classList.add('right');
+                                document.querySelector("#continue").classList.remove('hidden');
+                                answered = true;
+                                console.log('correct answer clicked')
+                            } else {
+                                element.classList.remove('option');
+                                element.classList.add('wrong');
+                                document.querySelector("#retry").classList.remove('hidden');
+                                answered = true;
+                                console.log('incorrect answer clicked')
+                            }
+                        }
+                    });
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', async (event) => {  
+                gists = await getGists();
+                draw();
+                addButtonEvents();
+            });
+        </script>
+	</body>
+</html>

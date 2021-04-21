@@ -1,0 +1,24 @@
+{
+  "name": "code-guesser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tailwindcss build ./src/css/tailwind.css -o ./public/css/tailwind.css",
+    "prod": "cross-env NODE_ENV=production postcss build ./src/css/tailwind.css -o ./public/css/tailwind.css",
+    "watch": ""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "autoprefixer": "^10.2.5",
+    "cssnano": "^5.0.1",
+    "onchange": "^7.1.0",
+    "postcss": "^8.2.10",
+    "postcss-cli": "^8.3.1",
+    "tailwindcss": "^2.1.1"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}
